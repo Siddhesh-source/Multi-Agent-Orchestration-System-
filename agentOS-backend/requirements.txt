@@ -1,0 +1,17 @@
+fastapi
+uvicorn[standard]
+langchain
+langchain-community
+langchain-ollama
+langgraph
+tavily-python
+chromadb
+sentence-transformers
+sqlalchemy
+aiosqlite
+python-dotenv
+httpx
+pydantic
+pydantic-settings
+langchain-google-genai
+google-generativeai

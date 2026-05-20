@@ -197,7 +197,7 @@ flowchart TB
         Fact[Fact Checker]
     end
     
-    subgraph Execution["Doing the Work]
+    subgraph Execution["Doing the Work"]
         W[Writer Agent]
         Cod[Code Agent]
         Data[Data Agent]
@@ -209,12 +209,12 @@ flowchart TB
         Sy[Synthesis]
     end
     
-    subgraph Quality["Quality Check]
+    subgraph Quality["Quality Check"]
         UQ[Confidence Scorer]
         MC[Learning Review]
     end
     
-    subgraph Memory["Memory]
+    subgraph Memory["Memory"]
         EM[Episodic]
         SM[Semantic]
         PM[Procedural]

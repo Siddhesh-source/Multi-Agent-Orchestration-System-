@@ -2,56 +2,29 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, ExternalLink, Clock, CheckCircle2, XCircle, Loader2 } from 'lucide-react'
+import { X, ExternalLink, Clock, CheckCircle2, XCircle, Loader2, Brain, Layers, Code2, BookOpen } from 'lucide-react'
 import { memoryApi, tasksApi } from '../lib/api'
 import { useDebounce } from '../hooks/useDebounce'
 import { useRelativeTime } from '../hooks/useRelativeTime'
 import { SkeletonRow } from '../components/shared/Skeleton'
 import ErrorRow from '../components/shared/ErrorRow'
 
-// ─── Mock memory entries ──────────────────────────────────────────────
-const MOCK_MEMORY = [
-    {
-        id: 'mem_001',
-        task_id: 'task_001',
-        task_description: 'Research the latest advances in transformer architecture efficiency',
-        chunk: 'Key finding: Flash Attention v2 reduces memory complexity from O(n²) to O(n). Multi-query attention (MQA) and grouped-query attention (GQA) are now standard in production LLMs for reducing KV cache size by 8–32×.',
-        score: 0.94,
-        timestamp: new Date(Date.now() - 1000 * 60 * 3).toISOString(),
-    },
-    {
-        id: 'mem_002',
-        task_id: 'task_002',
-        task_description: 'Research transformer architecture efficiency',
-        chunk: 'Speculative decoding reduces inference latency by 2–3× using a small draft model to propose token sequences that a larger model verifies in parallel.',
-        score: 0.81,
-        timestamp: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
-    },
-    {
-        id: 'mem_003',
-        task_id: 'task_003',
-        task_description: 'Write a Python script to batch-resize images in a folder',
-        chunk: "Pillow's Image.save() accepts a quality parameter for JPEG/WebP output. Use os.walk() for recursive directory traversal.",
-        score: 0.76,
-        timestamp: new Date(Date.now() - 1000 * 60 * 13).toISOString(),
-    },
-    {
-        id: 'mem_004',
-        task_id: 'task_004',
-        task_description: 'Compare pricing plans for AWS, GCP, and Azure',
-        chunk: 'AWS c5.9xlarge on-demand: $1.53/hr. GCP n2-standard-32: $1.37/hr. Azure Standard_D32s_v5: $1.54/hr.',
-        score: 0.89,
-        timestamp: new Date(Date.now() - 1000 * 60 * 122).toISOString(),
-    },
-    {
-        id: 'mem_005',
-        task_id: 'task_005',
-        task_description: 'Draft a product requirements document for a real-time markdown editor',
-        chunk: 'CRDTs are preferred over OT for P2P sync. Yjs and Automerge are the leading CRDT libraries for text.',
-        score: 0.65,
-        timestamp: new Date(Date.now() - 1000 * 60 * 300).toISOString(),
-    },
-]
+// ─── 3-Tier Memory Config ─────────────────────────────────────────────
+const MEMORY_TIERS = {
+    episodic:   { icon: Clock,    color: '#00D9FF', label: 'Episodic',   desc: 'Timestamped task events with recency decay' },
+    semantic:   { icon: Brain,    color: '#A855F7', label: 'Semantic',   desc: 'Entity knowledge & relationship graph' },
+    procedural: { icon: Code2,    color: '#22C55E', label: 'Procedural', desc: 'Workflow templates from successful tasks' },
+}
+
+function detectTier(entry) {
+    if (entry.tier) return entry.tier
+    if (entry.memory_type) return entry.memory_type
+    // Heuristic detection from content
+    const chunk = (entry.chunk || entry.content || '').toLowerCase()
+    if (chunk.includes('workflow') || chunk.includes('template') || chunk.includes('procedure') || chunk.includes('steps:')) return 'procedural'
+    if (chunk.includes('entity') || chunk.includes('concept') || chunk.includes('relationship') || chunk.includes('definition')) return 'semantic'
+    return 'episodic'
+}
 
 // ─── Task Detail Modal ────────────────────────────────────────────────
 function TaskDetailModal({ taskId, onClose }) {
@@ -232,6 +205,11 @@ function MemoryRow({ entry, index, onTaskClick }) {
     const [hovered, setHovered] = useState(false)
     const taskDesc = entry.task_description ?? ''
     const truncatedTask = taskDesc.length > 55 ? taskDesc.slice(0, 55) + '…' : taskDesc
+    
+    // Detect memory tier
+    const tierKey = detectTier(entry)
+    const tierConfig = MEMORY_TIERS[tierKey] || MEMORY_TIERS.episodic
+    const TierIcon = tierConfig.icon
 
     const handleClick = () => {
         console.log('Memory row clicked:', entry.task_id)
@@ -262,14 +240,27 @@ function MemoryRow({ entry, index, onTaskClick }) {
                 transition: 'background-color 120ms ease',
             }}
         >
-            {/* Top row: task source + timestamp */}
+            {/* Top row: task source + timestamp + tier badge */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
                 <span style={{ fontFamily: "'DM Mono', monospace", fontSize: '12px', color: hovered ? '#00D9FF' : '#E8E8F0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0, marginRight: '12px', transition: 'color 120ms' }}>
                     {truncatedTask}
                 </span>
-                <span style={{ fontFamily: "'DM Mono', monospace", fontSize: '10px', color: '#6B7280', flexShrink: 0 }}>
-                    {ago}
-                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ 
+                        display: 'flex', alignItems: 'center', gap: '4px',
+                        fontFamily: "'DM Mono', monospace", fontSize: '9px', 
+                        color: tierConfig.color, 
+                        padding: '2px 6px', borderRadius: '3px',
+                        backgroundColor: `${tierConfig.color}15`,
+                        border: `1px solid ${tierConfig.color}30`,
+                    }}>
+                        <TierIcon size={9} />
+                        {tierConfig.label}
+                    </span>
+                    <span style={{ fontFamily: "'DM Mono', monospace", fontSize: '10px', color: '#6B7280', flexShrink: 0 }}>
+                        {ago}
+                    </span>
+                </div>
             </div>
 
             {/* Body: memory chunk, 3-line clamp */}
@@ -299,6 +290,7 @@ function MemoryRow({ entry, index, onTaskClick }) {
 export default function Memory() {
     const [search, setSearch] = useState('')
     const [selectedTaskId, setSelectedTaskId] = useState(null)
+    const [activeTier, setActiveTier] = useState(null) // null = all tiers
     const debouncedQ = useDebounce(search, 300)
 
     console.log('Memory component - selectedTaskId:', selectedTaskId)
@@ -311,14 +303,30 @@ export default function Memory() {
     })
 
     const entries = data ?? []
-    const filtered = debouncedQ
-        ? entries.filter((e) =>
+    
+    // Filter by both search query and tier
+    const filtered = entries.filter((e) => {
+        // Search filter
+        const matchesSearch = !debouncedQ || 
             e.content?.toLowerCase().includes(debouncedQ.toLowerCase()) ||
             e.chunk?.toLowerCase().includes(debouncedQ.toLowerCase()) ||
             e.taskDescription?.toLowerCase().includes(debouncedQ.toLowerCase()) ||
             e.task_description?.toLowerCase().includes(debouncedQ.toLowerCase())
-        )
-        : entries
+        
+        // Tier filter
+        const entryTier = detectTier(e)
+        const matchesTier = !activeTier || entryTier === activeTier
+        
+        return matchesSearch && matchesTier
+    })
+
+    // Count entries per tier
+    const tierCounts = { episodic: 0, semantic: 0, procedural: 0 }
+    entries.forEach(e => {
+        const tier = detectTier(e)
+        if (tierCounts[tier] !== undefined) tierCounts[tier]++
+        else tierCounts.episodic++
+    })
 
     const handleTaskClick = (taskId) => {
         console.log('handleTaskClick called with:', taskId)
@@ -339,6 +347,41 @@ export default function Memory() {
                     <span style={{ fontFamily: "'DM Mono', monospace", fontSize: '10px', color: '#6B7280' }}>
                         {filtered.length} {filtered.length === 1 ? 'entry' : 'entries'}
                     </span>
+                </div>
+
+                {/* ── 3-Tier Filter ────────────────────────────────────────── */}
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+                    <button
+                        onClick={() => setActiveTier(null)}
+                        style={{
+                            padding: '6px 12px', borderRadius: '6px',
+                            background: activeTier === null ? 'rgba(255,255,255,0.08)' : 'transparent',
+                            border: `1px solid ${activeTier === null ? '#00D9FF' : '#1E1E2E'}`,
+                            color: activeTier === null ? '#00D9FF' : '#6B7280',
+                            fontFamily: "'DM Mono', monospace", fontSize: '10px',
+                            cursor: 'pointer', transition: 'all 150ms ease',
+                        }}
+                    >
+                        All ({entries.length})
+                    </button>
+                    {Object.entries(MEMORY_TIERS).map(([key, config]) => (
+                        <button
+                            key={key}
+                            onClick={() => setActiveTier(activeTier === key ? null : key)}
+                            style={{
+                                display: 'flex', alignItems: 'center', gap: '5px',
+                                padding: '6px 12px', borderRadius: '6px',
+                                background: activeTier === key ? `${config.color}15` : 'transparent',
+                                border: `1px solid ${activeTier === key ? config.color : '#1E1E2E'}`,
+                                color: activeTier === key ? config.color : '#6B7280',
+                                fontFamily: "'DM Mono', monospace", fontSize: '10px',
+                                cursor: 'pointer', transition: 'all 150ms ease',
+                            }}
+                        >
+                            <config.icon size={12} />
+                            {config.label} ({tierCounts[key]})
+                        </button>
+                    ))}
                 </div>
 
                 {/* ── Search bar ───────────────────────────────────────────── */}

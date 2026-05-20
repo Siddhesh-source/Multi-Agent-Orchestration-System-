@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from db.database import init_db
 from core.llm import health_check
 from api.routes import tasks, memory
+from api.routes.files import router as files_router
 from config import settings
 
 
@@ -32,6 +33,7 @@ app.add_middleware(
 
 app.include_router(tasks.router,  prefix="/api/task",   tags=["tasks"])
 app.include_router(memory.router, prefix="/api/memory", tags=["memory"])
+app.include_router(files_router,  prefix="/api/files",  tags=["files"])
 
 
 @app.get("/")

@@ -3,6 +3,7 @@ uvicorn[standard]
 langchain
 langchain-community
 langchain-ollama
+langchain-openai
 langgraph
 tavily-python
 chromadb
@@ -15,3 +16,9 @@ pydantic
 pydantic-settings
 langchain-google-genai
 google-generativeai
+weasyprint
+markdown
+python-pptx
+python-docx
+PyGithub
+apscheduler

@@ -265,7 +265,7 @@ export default function TaskView() {
         status: 'running',
         human_review_required: false,
         description: 'Loading task...',
-        startedAt: new Date().toISOString(),
+        started_at: new Date().toISOString(),
         final_output: null,
         confidence_score: null,
         metacognition_feedback: null,
@@ -371,7 +371,7 @@ export default function TaskView() {
                     <div style={{ padding: '8px 14px', borderBottom: '1px solid #1E1E2E', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <span style={{ fontFamily: "'DM Mono', monospace", fontSize: '10px', color: '#6B7280', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Task</span>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            <ElapsedChip startedAt={data.startedAt} />
+                            <ElapsedChip startedAt={data.started_at} />
                             <StatusBadge status={data.status} />
                         </div>
                     </div>
@@ -391,7 +391,7 @@ export default function TaskView() {
                 )}
 
                 <AnimatePresence>
-                    {isDone && finalOutput && (
+                    {isDone && finalOutput != null && (
                         <motion.div key="output" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}
                             style={{ border: '1px solid #1E1E2E', backgroundColor: '#111118', flex: 1, minHeight: 0 }}>
                             <div style={{ padding: '8px 14px', borderBottom: '1px solid #1E1E2E', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

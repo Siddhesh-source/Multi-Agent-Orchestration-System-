@@ -576,13 +576,13 @@ def route_after_uncertainty(state: EnhancedAgentState) -> str:
 
 def route_after_memory(state: EnhancedAgentState) -> str:
     """Check if more batches to process."""
-    next_batch = state["current_batch_index"] + 1
+    current = state["current_batch_index"]
     total = len(state["execution_batches"])
-    print(f"[route_after_memory] next_batch={next_batch} total={total}")
-    
-    if next_batch >= total:
+    print(f"[route_after_memory] current_batch_index={current} total={total}")
+
+    if current >= total:
         return "metacognition"
-    
+
     return "cognitive_route"
 
 

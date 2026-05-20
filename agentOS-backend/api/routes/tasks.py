@@ -89,9 +89,11 @@ async def get_task_status(task_id: str, db: AsyncSession = Depends(get_db)):
 
     return TaskStatusResponse(
         task_id=task.id,
+        description=task.description,
         status=task.status,
         human_review_required=task.human_review_required,
         final_output=task.final_output,
+        started_at=task.started_at,
         agents=agents,
     )
 

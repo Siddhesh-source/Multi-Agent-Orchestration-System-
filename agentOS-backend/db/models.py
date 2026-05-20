@@ -22,6 +22,7 @@ class Task(Base):
     created_at:            Mapped[datetime]      = mapped_column(DateTime(timezone=True), default=_utcnow)
     updated_at:            Mapped[datetime]      = mapped_column(DateTime(timezone=True), default=_utcnow, onupdate=_utcnow)
     duration_seconds:      Mapped[float | None]  = mapped_column(Float,       nullable=True)
+    started_at:            Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     final_output:          Mapped[str | None]    = mapped_column(Text,        nullable=True)
 
 

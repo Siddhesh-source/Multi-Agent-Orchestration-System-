@@ -102,6 +102,7 @@ class TaskOrchestrator:
             task = await session.get(Task, task_id)
             if task:
                 task.status = "running"
+                task.started_at = datetime.now(timezone.utc)
                 task.updated_at = datetime.now(timezone.utc)
                 await session.commit()
         
@@ -158,6 +159,7 @@ class TaskOrchestrator:
             task = await session.get(Task, task_id)
             if task:
                 task.status = "running"
+                task.started_at = datetime.now(timezone.utc)
                 task.updated_at = datetime.now(timezone.utc)
                 await session.commit()
 

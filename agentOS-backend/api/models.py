@@ -40,6 +40,7 @@ class AgentLogResponse(BaseModel):
 
 class TaskStatusResponse(BaseModel):
     task_id: str
+    description: Optional[str] = None
     status: str
     human_review_required: bool
     final_output: Optional[str] = None

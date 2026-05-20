@@ -1,78 +1,148 @@
 # AgentOS
 
-A multi-agent orchestration system that breaks down complex tasks into subtasks and executes them through specialized AI agents with memory persistence and quality control.
+> An autonomous research & execution agent system with human-like memory, self-reflection, and multi-agent debate.
+
+## The Story
+
+Imagine asking an AI: *"Write me a research paper on quantum computing in finance"* — and instead of a generic response, you get a system that:
+
+1. **Plans** — Breaks your request into a dependency-aware task graph (some tasks parallel, some sequential)
+2. **Thinks** — Estimates what it *doesn't know* (epistemic gap) and routes accordingly
+3. **Researches** — Fetches latest papers when needed, not for everything
+4. **Debates** — Three AI critics (Skeptic, Devil's Advocate, Synthesis) review the output
+5. **Quantifies Uncertainty** — Ensures every answer comes with a confidence score
+6. **Remembers** — Stores knowledge in 3-tier memory (episodic + semantic + procedural)
+7. **Learns** — Meta-cognitively reflects on failures and adjusts its own prompts
+
+That's **AgentOS** — an agent operating system designed for complex, multi-step knowledge work.
 
 ## Architecture
 
 ```mermaid
-graph LR
-    A[User Task] --> B[Planner]
-    B --> C{Research Needed?}
-    C -->|Yes| D[Research Agent]
-    C -->|No| E[Executor Agent]
-    D --> E
-    E --> F[Critic Agent]
-    F -->|Approved| G[Memory Agent]
-    F -->|Retry| E
-    F -->|Human Review| H[Human Wait]
-    H --> F
-    G -->|Next Subtask| C
-    G -->|Complete| I[Final Output]
-```
-
-## Agent Workflow
-
-```mermaid
-sequenceDiagram
-    participant U as User
-    participant P as Planner
-    participant R as Research
-    participant E as Executor
-    participant C as Critic
-    participant M as Memory
-    
-    U->>P: Submit Task
-    P->>P: Break into Subtasks
-    loop For Each Subtask
-        alt Needs Research
-            P->>R: Research Context
-            R->>E: Provide Context
-        else Direct Execution
-            P->>E: Execute Subtask
-        end
-        E->>C: Review Output
-        alt Approved
-            C->>M: Store Result
-        else Retry (max 2)
-            C->>E: Retry with Feedback
-        end
+flowchart TB
+    subgraph User["User Task"]
+        T[Task Input]
     end
-    M->>U: Final Output
+    
+    subgraph Planning["DAG Planning"]
+        P[Planner Agent]
+        D[DAG with Dependencies]
+    end
+    
+    subgraph Cognition["Cognitive Routing"]
+        C[Epistemic Gap Estimator]
+        R{Research Needed?}
+    end
+    
+    subgraph Research["Research Pipeline"]
+        Lit[Literature Agent]
+        Fact[Fact Checker]
+    end
+    
+    subgraph Execution["Specialist Execution"]
+        W[Writer Agent]
+        Cod[Code Agent]
+        Data[Data Agent]
+    end
+    
+    subgraph Review["Society of Critics"]
+        Sk[Skeptic]
+        DA[Devil's Advocate]
+        Sy[Synthesis]
+    end
+    
+    subgraph Quality["Quality & Uncertainty"]
+        UQ[Uncertainty Quantifier]
+        MC[Metacognition]
+    end
+    
+    subgraph Memory["3-Tier Memory"]
+        EM[Episodic]
+        SM[Semantic]
+        PM[Procedural]
+    end
+    
+    T --> P
+    P --> D
+    D --> C
+    C --> R
+    R -->|Yes| Lit
+    R -->|No| W
+    Lit --> D
+    D --> W
+    W --> Sk
+    Sk --> DA
+    DA --> Sy
+    Sy --> UQ
+    UQ --> MC
+    MC --> EM
+    EM --> SM
+    SM --> PM
+    
+    style User fill:#e1f5fe
+    style Planning fill:#f3e5f5
+    style Cognition fill:#e8f5e8
+    style Research fill:#fff3e0
+    style Execution fill:#fce4ec
+    style Review fill:#fffde7
+    style Quality fill:#e0f7fa
+    style Memory fill:#f1f8e9
 ```
 
-## Features
+## Key Features
 
-- **Multi-Agent System**: Specialized agents for planning, research, execution, and quality control
-- **Intelligent Routing**: Automatic research detection for knowledge-intensive subtasks
-- **Quality Assurance**: Built-in critic agent with retry logic and optional human review
-- **Memory Persistence**: ChromaDB-powered semantic memory for context retrieval
-- **Real-time Updates**: Live agent status tracking via REST API
-- **Modern UI**: React-based dashboard with task monitoring and memory exploration
+| Feature | What It Does |
+|---------|--------------|
+| **DAG Task Planning** | Breaks tasks into dependency-aware graph; parallelizes independent subtasks |
+| **Cognitive Routing** | LLM-as-judge estimates epistemic gap; routes to research only when needed |
+| **Pluggable Specialist Agents** | 15+ specialist agents (Writer, Debugger, DataAnalyzer, etc.) with intelligent dispatch |
+| **Society of Critics** | 3-agent debate (Skeptic → Devil's Advocate → Synthesis) for quality review |
+| **3-Tier Memory** | Episodic (events), Semantic (entities), Procedural (workflows) — like human memory |
+| **Uncertainty Quantification** | Runs outputs 3 times, computes confidence scores using semantic variance |
+| **Agent Metacognition** | Self-reviews failures, dynamically adjusts prompts over time |
+| **Human-in-the-Loop** | Optional human review for critical decisions |
+
+## How AgentOS Differs from Claude, GPT, or Existing Solutions
+
+| Aspect | Claude/GPT (Chat Mode) | AgentOS |
+|--------|----------------------|---------|
+| **Task Handling** | Single prompt → single response | Breaks into DAG, executes multi-step |
+| **Research** | May hallucinate stale info |主动路由 research agents when epistemic gap is high |
+| **Memory** | No persistent memory | 3-tier memory with forgetting curves |
+| **Quality Review** | No built-in critic | Multi-agent adversarial debate + uncertainty scoring |
+| **Self-Improvement** | Static prompts | Metacognitive feedback loop adjusts prompts |
+| **Planning** | Implicit, one-shot | Explicit dependency graph with parallel execution |
+| **Transparency** | Black box | Full agent logs, debate transcripts, confidence scores |
+
+> **In short**: Claude/GPT answer questions. AgentOS *executes complex tasks* with research, debate, memory, and self-reflection — like a team of specialists working together.
 
 ## Tech Stack
 
-**Backend**
-- FastAPI (Python)
-- LangGraph for agent orchestration
-- ChromaDB for vector memory
-- SQLite for task persistence
-- Google Gemini for LLM
+| Layer | Technology | 1-Line Explanation |
+|-------|------------|-------------------|
+| **Orchestration** | LangGraph | Graph-based agent workflow with state management |
+| **LLM** | Google Gemini | Foundational model for reasoning & generation |
+| **Vector Memory** | ChromaDB | Semantic search over stored knowledge |
+| **Database** | SQLite | Task metadata & session persistence |
+| **Backend API** | FastAPI | High-performance async Python web server |
+| **Frontend** | React + Vite | Modern SPA with hot module replacement |
+| **State** | TanStack Query | Server state synchronization & caching |
+| **Animations** | Framer Motion | Smooth UI transitions |
+| **Icons** | Lucide | Lightweight icon set |
 
-**Frontend**
-- React + Vite
-- TanStack Query for state management
-- Framer Motion for animations
-- Lucide icons
+## What AgentOS Does
+
+- **Accepts complex tasks** — like "research + write + cite" workflows
+- **Decomposes into DAG** — dependency-aware task graph with parallel execution
+- **Intelligently routes** — estimates what it knows vs. needs to research
+- **Executes specialists** — dispatches to 15+ specialist agents based on task type
+- **Debates quality** — Skeptic/Devil's Advocate/Synthesis review output
+- **Scores confidence** — uncertainty quantification for every output
+- **Stores in memory** — 3-tier (episodic/semantic/procedural) with forgetting curves
+- **Learns from failures** — metacognition adjusts prompts over time
+- **Optional human review** — critical decisions can pause for human approval
+
+---
 
 ## Quick Start
 
@@ -86,11 +156,7 @@ sequenceDiagram
 ```bash
 cd agentOS-backend
 pip install -r requirements.txt
-
-# Create .env file
 echo "GEMINI_API_KEY=your_api_key_here" > .env
-
-# Start server
 uvicorn main:app --reload --port 8000
 ```
 
@@ -102,79 +168,55 @@ npm install
 npm run dev
 ```
 
-Access the dashboard at `http://localhost:5173`
+**Dashboard**: `http://localhost:5173`
 
 ## API Endpoints
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/api/task` | POST | Submit new task |
-| `/api/task/{id}/status` | GET | Get task status & agent logs |
-| `/api/task/{id}/approve` | POST | Approve/reject human review |
+| `/api/task/{id}/status` | GET | Get task status & logs |
+| `/api/task/{id}/approve` | POST | Approve/reject review |
 | `/api/task` | GET | List all tasks |
-| `/api/memory/search?q=` | GET | Search memory |
+| `/api/memory/search?q=` | GET | Semantic memory search |
 | `/api/memory/count` | GET | Memory entry count |
 
 ## Project Structure
 
 ```
-.
-├── agentOS-backend/
-│   ├── agents/          # Agent implementations
-│   ├── api/             # FastAPI routes & models
-│   ├── core/            # LangGraph workflow & LLM
-│   ├── db/              # Database models & connection
-│   └── memory/          # ChromaDB integration
-│
-└── agentos/
-    ├── src/
-    │   ├── components/  # React components
-    │   ├── pages/       # Dashboard, TaskView, Memory
-    │   ├── hooks/       # Custom React hooks
-    │   └── lib/         # API client
-    └── public/
+agentOS-backend/
+├── agents/           # Specialist agents (Writer, Debugger, Research...)
+├── core/             # LangGraph workflow orchestration
+├── memory/           # ChromaDB + 3-tier memory
+└── api/              # FastAPI routes
+
+agentos/              # React frontend
+├── src/components/   # UI components
+├── src/pages/        # Dashboard, TaskView, Memory
+└── src/hooks/        # Custom React hooks
 ```
 
-## Configuration
+## Agent Registry
 
-### Environment Variables
-
-**Backend** (`.env`)
-```env
-GEMINI_API_KEY=your_key_here
-DATABASE_URL=sqlite:///./agentOS.db
-CHROMA_PERSIST_DIR=./chroma_db
-```
-
-**Frontend** (`src/lib/api.js`)
-```javascript
-baseURL: 'http://localhost:8000'
-```
-
-## Agent Details
-
-| Agent | Purpose | Triggers |
-|-------|---------|----------|
-| **Planner** | Breaks task into subtasks | Always first |
-| **Research** | Gathers context from web/memory | Keywords: find, search, research, latest, current |
-| **Executor** | Executes subtask with context | Every subtask |
-| **Critic** | Reviews output quality | After execution |
-| **Memory** | Stores results in ChromaDB | After approval |
+| Category | Agents |
+|----------|--------|
+| **Content** | Writer, Editor, Summarizer |
+| **Code** | CodeGen, Debugger, TestGen, CodeReview |
+| **Research** | Literature, Citation, FactChecker |
+| **Data** | DataAnalyzer, Visualizer, DataCleaner |
+| **Document** | DocGenerator, SlideGenerator |
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+1. Fork → Branch → Commit → Push → PR
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) file for details
+MIT — see [LICENSE](LICENSE)
 
-## Acknowledgments
+## Built With
 
-- Built with [LangGraph](https://github.com/langchain-ai/langgraph)
-- Powered by [Google Gemini](https://ai.google.dev/)
-- Vector storage by [ChromaDB](https://www.trychroma.com/)
+- [LangGraph](https://github.com/langchain-ai/langgraph) — Agent orchestration
+- [Google Gemini](https://ai.google.dev/) — LLM backbone
+- [ChromaDB](https://www.trychroma.com/) — Vector memory
+- [FastAPI](https://fastapi.tiangolo.com/) — Backend API
